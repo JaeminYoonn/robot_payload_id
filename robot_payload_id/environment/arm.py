@@ -39,7 +39,7 @@ def create_arm(
     # Add arm
     parser.AddModels(arm_file_path)
     try:
-        arm = plant.GetModelInstanceByName("iiwa")
+        arm = plant.GetModelInstanceByName("panda")
     except:
         arm = plant.GetModelInstanceByName("arm")
     plant.Finalize()

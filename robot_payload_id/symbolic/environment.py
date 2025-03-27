@@ -141,8 +141,9 @@ def create_symbolic_plant(
         )
 
         try:
-            # There is no hope to identify link 0, so we skip it
-            link: RigidBody = sym_plant.GetBodyByName(f"iiwa_link_{i+1}")
+            # # There is no hope to identify link 0, so we skip it
+            # link: RigidBody = sym_plant.GetBodyByName(f"iiwa_link_{i+1}")
+            link: RigidBody = sym_plant.GetBodyByName(f"panda_link{i+1}")
         except:
             link: RigidBody = sym_plant.GetBodyByName(f"link{i + 1}")
 
@@ -246,10 +247,15 @@ def create_autodiff_plant(
 
         try:
             # There is no hope to identify link 0, so we skip it
-            link: RigidBody = ad_plant.GetBodyByName(f"iiwa_link_{i+1}")
-            joint: RevoluteJoint = ad_plant.GetJointByName(f"iiwa_joint_{i+1}")
+            # link: RigidBody = ad_plant.GetBodyByName(f"iiwa_link_{i+1}")
+            # joint: RevoluteJoint = ad_plant.GetJointByName(f"iiwa_joint_{i+1}")
+            # joint_actuator: JointActuator = ad_plant.GetJointActuatorByName(
+            #     f"iiwa_joint_{i+1}"
+            # )
+            link: RigidBody = ad_plant.GetBodyByName(f"panda_link{i+1}")
+            joint: RevoluteJoint = ad_plant.GetJointByName(f"panda_joint{i+1}")
             joint_actuator: JointActuator = ad_plant.GetJointActuatorByName(
-                f"iiwa_joint_{i+1}"
+                f"panda_motor{i+1}"
             )
         except:
             link: RigidBody = ad_plant.GetBodyByName(f"link{i + 1}")

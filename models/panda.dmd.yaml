@@ -1,11 +1,9 @@
 # Panda arm with no hand.
 
 directives:
-- add_model_instance:
-    name: right
 - add_model:
-    name: right::panda
+    name: panda
     file: package://drake_models/franka_description/urdf/panda_arm.urdf
 - add_weld:
     parent: world
-    child: right::panda::panda_link0
+    child: panda::panda_link0

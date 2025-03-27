@@ -283,9 +283,9 @@ def main():
         "./models/one_link_arm_with_obstacle.dmd.yaml"
         if use_one_link_arm
         else (
-            "./models/iiwa.dmd.yaml"
+            "./models/panda.dmd.yaml"
             if args.no_obstacles
-            else "./models/iiwa_with_obstacles.dmd.yaml"
+            else "./models/panda_with_obstacles.dmd.yaml"
         )
     )
 
@@ -294,7 +294,7 @@ def main():
     plant_context = plant.GetMyContextFromRoot(
         arm_components.diagram.CreateDefaultContext()
     )
-    robot_model_instance_name = "arm" if use_one_link_arm else "iiwa"
+    robot_model_instance_name = "arm" if use_one_link_arm else "panda"
     robot_model_instance_idx = plant.GetModelInstanceByName(robot_model_instance_name)
 
     optimizer = args.optimizer

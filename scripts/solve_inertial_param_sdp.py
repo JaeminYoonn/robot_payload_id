@@ -550,7 +550,7 @@ def main():
     model_path = (
         "./models/one_link_arm.sdf"
         if args.use_one_link_arm
-        else "./models/iiwa.dmd.yaml"
+        else "./models/panda.dmd.yaml"
     )
     arm_components = create_arm(
         arm_file_path=model_path, num_joints=num_joints, time_step=0.0
@@ -909,7 +909,7 @@ def main():
                 else:
                     # Transform into the payload frame
                     last_link = arm_plant_components_gt.plant.GetBodyByName(
-                        f"iiwa_link_7"
+                        f"panda_link_7"
                     )
                     payload_frame = arm_plant_components_gt.plant.GetFrameByName(
                         payload_frame_name

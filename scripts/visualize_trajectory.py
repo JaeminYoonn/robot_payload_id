@@ -70,7 +70,7 @@ def main():
     urdf_path = (
         "./models/one_link_arm_with_obstacle.dmd.yaml"
         if args.use_one_link_arm
-        else "./models/iiwa_with_obstacles.dmd.yaml"
+        else "./models/panda_with_obstacles.dmd.yaml"
     )
     arm_components = create_arm(
         arm_file_path=urdf_path, num_joints=num_joints, time_step=0.0, use_meshcat=True
