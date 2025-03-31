@@ -13,21 +13,48 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
 from hday_motion_planner_msgs.srv import Move
+import time
+
 
 exit_mode = False
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--traj_parameter_path",
+    type=Path,
+    required=True,
+    help="Path to the trajectory parameter folder. The folder must contain "
+    + "'a_value.npy', 'b_value.npy', and 'q0_value.npy' or 'control_points.npy', "
+    + "'knots.npy', and 'spline_order.npy'.",
+)
+parser.add_argument(
+    "--save_data_path",
+    type=Path,
+    help="Path to save the data to.",
+)
+parser.add_argument(
+    "--time_horizon",
+    type=float,
+    default=10.0,
+    help="The time horizon/ duration of the trajectory. Only used for Fourier "
+    + "series trajectories.",
+)
+
+args = parser.parse_args()
 
 
 class JointStatePublisher(Node):
     def __init__(self):
         super().__init__("joint_state_publisher")
 
+        self.dt_pub = 0.001
         self.dt = 0.001
 
         self.publisher_ = self.create_publisher(
-            JointState, "/hday/rt_franka/desired_joint_state", 10
+            JointState, "/hday/fr3_controller/desired_joint_state", 10
         )
         self.timer = self.create_timer(
-            self.dt, self.publish_joint_states
+            self.dt_pub, self.loop_callback
         )  # 10Hz 주기로 발행
 
         self.joint_state_subscriber = self.create_subscription(
@@ -47,29 +74,6 @@ class JointStatePublisher(Node):
         while not self.motion_planner_client.wait_for_service(timeout_sec=1.0):
             self.get_logger().warn("Waiting for Motion Planner Server")
 
-        parser = argparse.ArgumentParser()
-        parser.add_argument(
-            "--traj_parameter_path",
-            type=Path,
-            required=True,
-            help="Path to the trajectory parameter folder. The folder must contain "
-            + "'a_value.npy', 'b_value.npy', and 'q0_value.npy' or 'control_points.npy', "
-            + "'knots.npy', and 'spline_order.npy'.",
-        )
-        parser.add_argument(
-            "--save_data_path",
-            type=Path,
-            help="Path to save the data to.",
-        )
-        parser.add_argument(
-            "--time_horizon",
-            type=float,
-            default=10.0,
-            help="The time horizon/ duration of the trajectory. Only used for Fourier "
-            + "series trajectories.",
-        )
-
-        args = parser.parse_args()
         traj_parameter_path = args.traj_parameter_path
         self.save_data_path = args.save_data_path
         self.time_horizon = args.time_horizon
@@ -81,6 +85,7 @@ class JointStatePublisher(Node):
         )
         self.time_now = 0
         self.ini = True
+        self.move_res_received = True
 
         self.joint_position = None
         self.joint_velocity = None
@@ -102,26 +107,30 @@ class JointStatePublisher(Node):
     def sub_joint_command(self, msg: JointState):
         self.joint_torque_command = np.asarray(msg.effort, dtype=np.float32)
 
-    def publish_joint_states(self):
+    def loop_callback(self):
         if self.ini:
-            joint_state_msg = JointState()
-            joint_state_msg.header.stamp = self.get_clock().now().to_msg()
-            joint_state_msg.header.frame_id = "map"
+            if self.move_res_received:
+                joint_state_msg = JointState()
+                joint_state_msg.header.stamp = self.get_clock().now().to_msg()
+                joint_state_msg.header.frame_id = "map"
 
-            joint_position_command = self.excitation_traj._compute_positions(0)
-            joint_state_msg.position = joint_position_command.tolist()
-            for i in range(len(joint_state_msg.position)):
-                joint_state_msg.name.append("joint" + str(i + 1))
+                joint_position_command = self.excitation_traj._compute_positions(0)
+                joint_state_msg.position = joint_position_command.tolist()
+                for i in range(len(joint_state_msg.position)):
+                    joint_state_msg.name.append("joint" + str(i + 1))
 
-            self.move_srv.stamp = joint_state_msg.header.stamp
-            self.move_srv.joint_target = joint_state_msg
+                move_srv = Move.Request()
+                move_srv.stamp = joint_state_msg.header.stamp
+                move_srv.joint_target = joint_state_msg
 
-            self.future = self.motion_planner_client.call_async(self.move_srv)
-            self.move_res_received = False
-
-            if self.future.done():
-                self.ini = False
-
+                self.future = self.motion_planner_client.call_async(move_srv)
+                self.move_res_received = False
+    
+            else:
+                if self.future.done():
+                    print("MP is done")
+                    time.sleep(2)
+                    self.ini = False
         if not self.ini:
             if self.joint_position is None:
                 print("Joint State is not subscribed")
@@ -146,13 +155,6 @@ class JointStatePublisher(Node):
             self.publisher_.publish(joint_state_msg)
             # self.get_logger().info(f"Published JointState: {msg.position}")
 
-            self.joint_positions.append(self.joint_position)
-            self.joint_velocities.append(self.joint_velocity)
-            self.joint_torques.append(self.joint_torque)
-            self.joint_position_commands.append(self.joint_position_command)
-            self.joint_torque_commands.append(self.joint_torque_command)
-            self.sample_times_s.append(self.time_now)
-
             self.time_now += self.dt
             if self.time_now >= self.time_horizon:
 
@@ -160,6 +162,14 @@ class JointStatePublisher(Node):
                 self.destroy_node()
                 global exit_mode
                 exit_mode = True
+
+            self.joint_positions.append(self.joint_position)
+            self.joint_velocities.append(self.joint_velocity)
+            self.joint_torques.append(self.joint_torque)
+            self.joint_position_commands.append(self.joint_position_command)
+            self.joint_torque_commands.append(self.joint_torque_command)
+            self.sample_times_s.append(self.time_now)
+
 
     def data_save(self):
         self.joint_positions = np.array(self.joint_positions)

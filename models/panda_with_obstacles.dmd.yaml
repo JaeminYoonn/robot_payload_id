@@ -9,7 +9,8 @@ directives:
         translation: [0.0, 0.0, -0.05]
 - add_model:
     name: panda
-    file: package://drake_models/franka_description/urdf/panda_arm.urdf
+#    file: package://drake_models/franka_description/urdf/panda_arm.urdf
+    file: package://robot_payload_id/panda_default.urdf
 - add_weld:
     parent: world
     child: panda::panda_link0
