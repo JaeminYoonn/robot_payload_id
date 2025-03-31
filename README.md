@@ -65,7 +65,7 @@ python scripts/design_optimal_excitation_trajectories.py --optimizer black_box \
 --num_fourier_terms 5 --max_al_iterations 20 --budget 100000 --mu_initial 5 \
 --min_time_horizon 10 --max_time_horizon 10 --num_timesteps 1000 --num_workers 32 \
 --mu_multiplier 1.5 --omega 0.6283 --log_level ERROR --initial_guess_scaling 0.1 \
---logging_path logs/gripper_payload_box/iiwa_eoptimality_10s_5Fterm_1000timesteps_20_100000
+--logging_path logs/gripper_payload_box/iiwa_eoptimality_10s_5Fterm_1000timesteps_20_100000 --wandbe_mode disabled
 ```
 We achieved a condition number of `116.7`, a e-optimality of `-2883`, equality
 constraint violations of `1e-5`, and inequality constraint violations of `1e-6` Note
@@ -75,7 +75,7 @@ is much lower.
 It is recommended to pick the biggest value of `--initial_guess_scaling` that results in
 an initial guess without collisions.
 
-### Use a Fourier series trajectory as an initial guess for BSpline trajectory optimization
+<!-- ### Use a Fourier series trajectory as an initial guess for BSpline trajectory optimization
 
 First, convert the optimized Fourier series trajectory into a BSpline trajectory:
 ```bash
@@ -96,7 +96,7 @@ python scripts/design_optimal_excitation_trajectories.py  \
 
 *Note:* When using multiple workers for BSpline optimization, it is best to use `CMAstd`
 as the optimizer. The default optimizers seem to have bugs (see
-[issue](https://github.com/facebookresearch/nevergrad/issues/1593)).
+[issue](https://github.com/facebookresearch/nevergrad/issues/1593)). -->
 
 ### Visualize the designed trajectories
 
@@ -120,6 +120,15 @@ python scripts/collect_joint_data.py --scenario_path models/iiwa_scenario.yaml \
 ```
 
 Add the `--use_hardware` flag to collect data on the real robot.
+
+## Collect joint data (Holiday Version)
+
+Make sure to use the same parameters for `num_timesteps` and `time_horizon` as were used
+for the optimal trajectory design.
+```bash
+python scripts/collect_joint_data_holiday.py \
+--traj_parameter_path logs/traj --save_data_path joint_data/panda --time_horizon 10
+```
 
 ## Process collected joint data
 

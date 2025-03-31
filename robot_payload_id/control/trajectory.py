@@ -4,11 +4,11 @@ from typing import Optional, Union
 
 import numpy as np
 
-from iiwa_setup.iiwa import IiwaHardwareStationDiagram
-from iiwa_setup.motion_planning import (
-    plan_unconstrained_gcs_path_start_to_goal,
-    reparameterize_with_toppra,
-)
+# from iiwa_setup.iiwa import IiwaHardwareStationDiagram
+# from iiwa_setup.motion_planning import (
+#     plan_unconstrained_gcs_path_start_to_goal,
+#     reparameterize_with_toppra,
+# )
 from pydrake.all import (
     CompositeTrajectory,
     Context,
@@ -149,288 +149,288 @@ class FourierSeriesTrajectory(Trajectory):
         self._q0 = state["_q0"]
 
 
-class ExcitationTrajectorySourceInitializer(LeafSystem):
-    """
-    A system that initializes the trajectory source with the start and excitation
-    trajectories. The start trajectory is an unconstrained GCS trajectory from the start
-    positions to the excitation trajectory start positions.
-    """
+# class ExcitationTrajectorySourceInitializer(LeafSystem):
+#     """
+#     A system that initializes the trajectory source with the start and excitation
+#     trajectories. The start trajectory is an unconstrained GCS trajectory from the start
+#     positions to the excitation trajectory start positions.
+#     """
 
-    def __init__(
-        self,
-        station: IiwaHardwareStationDiagram,
-        excitaiton_traj: Trajectory,
-        traj_source: TrajectorySource,
-        q_pickup: Optional[np.ndarray] = None,
-        q_dropoff: Optional[np.ndarray] = None,
-        start_traj_limit_fraction: float = 0.2,
-    ):
-        """
-        Args:
-            station: The IIWA hardware station diagram.
-            excitaiton_traj: The excitation trajectory.
-            traj_source: The trajectory source to initialize.
-            q_pickup: The joint positions to pick up an object at. Can be None.
-            q_dropoff: The joint positions to drop off an object at. Can be None.
-            start_traj_limit_fraction: The fraction of the velocity and acceleration
-                limits to use when retiming the start trajectory with Toppra.
-        """
-        super().__init__()
+#     def __init__(
+#         self,
+#         station: IiwaHardwareStationDiagram,
+#         excitaiton_traj: Trajectory,
+#         traj_source: TrajectorySource,
+#         q_pickup: Optional[np.ndarray] = None,
+#         q_dropoff: Optional[np.ndarray] = None,
+#         start_traj_limit_fraction: float = 0.2,
+#     ):
+#         """
+#         Args:
+#             station: The IIWA hardware station diagram.
+#             excitaiton_traj: The excitation trajectory.
+#             traj_source: The trajectory source to initialize.
+#             q_pickup: The joint positions to pick up an object at. Can be None.
+#             q_dropoff: The joint positions to drop off an object at. Can be None.
+#             start_traj_limit_fraction: The fraction of the velocity and acceleration
+#                 limits to use when retiming the start trajectory with Toppra.
+#         """
+#         super().__init__()
 
-        self._station = station
-        self._excitation_traj = excitaiton_traj
-        self._traj_source = traj_source
-        self._q_pickup = q_pickup
-        self._q_dropoff = q_dropoff
-        self._start_traj_limit_fraction = start_traj_limit_fraction
+#         self._station = station
+#         self._excitation_traj = excitaiton_traj
+#         self._traj_source = traj_source
+#         self._q_pickup = q_pickup
+#         self._q_dropoff = q_dropoff
+#         self._start_traj_limit_fraction = start_traj_limit_fraction
 
-        num_joint_positions = station.get_iiwa_controller_plant().num_positions()
-        self._iiwa_position_measured_input_port = self.DeclareVectorInputPort(
-            "iiwa.position_measured", num_joint_positions
-        )
+#         num_joint_positions = station.get_iiwa_controller_plant().num_positions()
+#         self._iiwa_position_measured_input_port = self.DeclareVectorInputPort(
+#             "iiwa.position_measured", num_joint_positions
+#         )
 
-        self._pickup_pause_end_time = None
-        self._dropoff_time = None
-        self.DeclareInitializationDiscreteUpdateEvent(self._initialize_discrete_state)
+#         self._pickup_pause_end_time = None
+#         self._dropoff_time = None
+#         self.DeclareInitializationDiscreteUpdateEvent(self._initialize_discrete_state)
 
-    def _initialize_discrete_state(
-        self, context: Context, discrete_values: DiscreteValues
-    ) -> None:
-        iiwa_controller_plant = self._station.get_iiwa_controller_plant()
-        q_current = self._iiwa_position_measured_input_port.Eval(context)
+#     def _initialize_discrete_state(
+#         self, context: Context, discrete_values: DiscreteValues
+#     ) -> None:
+#         iiwa_controller_plant = self._station.get_iiwa_controller_plant()
+#         q_current = self._iiwa_position_measured_input_port.Eval(context)
 
-        # Delay the start trajectory by 5s.
-        start_traj_start_time = 5.0
+#         # Delay the start trajectory by 5s.
+#         start_traj_start_time = 5.0
 
-        trajs = []
-        if self._q_pickup is not None:
-            # Add traj to pickup positon.
-            pickup_traj = plan_unconstrained_gcs_path_start_to_goal(
-                plant=iiwa_controller_plant,
-                q_start=q_current,
-                q_goal=self._q_pickup,
-            )
-            pickup_traj_retimed = reparameterize_with_toppra(
-                trajectory=pickup_traj,
-                plant=iiwa_controller_plant,
-                velocity_limits=np.min(
-                    [
-                        np.abs(iiwa_controller_plant.GetVelocityLowerLimits()),
-                        np.abs(iiwa_controller_plant.GetVelocityUpperLimits()),
-                    ],
-                    axis=0,
-                )
-                * self._start_traj_limit_fraction,
-                acceleration_limits=np.min(
-                    [
-                        np.abs(iiwa_controller_plant.GetAccelerationLowerLimits()),
-                        np.abs(iiwa_controller_plant.GetAccelerationUpperLimits()),
-                    ],
-                    axis=0,
-                )
-                * self._start_traj_limit_fraction,
-            )
-            q_current = self._q_pickup
+#         trajs = []
+#         if self._q_pickup is not None:
+#             # Add traj to pickup positon.
+#             pickup_traj = plan_unconstrained_gcs_path_start_to_goal(
+#                 plant=iiwa_controller_plant,
+#                 q_start=q_current,
+#                 q_goal=self._q_pickup,
+#             )
+#             pickup_traj_retimed = reparameterize_with_toppra(
+#                 trajectory=pickup_traj,
+#                 plant=iiwa_controller_plant,
+#                 velocity_limits=np.min(
+#                     [
+#                         np.abs(iiwa_controller_plant.GetVelocityLowerLimits()),
+#                         np.abs(iiwa_controller_plant.GetVelocityUpperLimits()),
+#                     ],
+#                     axis=0,
+#                 )
+#                 * self._start_traj_limit_fraction,
+#                 acceleration_limits=np.min(
+#                     [
+#                         np.abs(iiwa_controller_plant.GetAccelerationLowerLimits()),
+#                         np.abs(iiwa_controller_plant.GetAccelerationUpperLimits()),
+#                     ],
+#                     axis=0,
+#                 )
+#                 * self._start_traj_limit_fraction,
+#             )
+#             q_current = self._q_pickup
 
-            # Delay the pickup trajectory by 5s.
-            pickup_traj_time = PiecewisePolynomial().FirstOrderHold(
-                [0.0, pickup_traj_retimed.end_time()],
-                [[0.0, pickup_traj_retimed.end_time()]],
-            )
-            pickup_traj_time.shiftRight(5.0)
-            pickup_traj_delayed = PathParameterizedTrajectory(
-                path=pickup_traj_retimed, time_scaling=pickup_traj_time
-            )
-            trajs.append(pickup_traj_delayed)
+#             # Delay the pickup trajectory by 5s.
+#             pickup_traj_time = PiecewisePolynomial().FirstOrderHold(
+#                 [0.0, pickup_traj_retimed.end_time()],
+#                 [[0.0, pickup_traj_retimed.end_time()]],
+#             )
+#             pickup_traj_time.shiftRight(5.0)
+#             pickup_traj_delayed = PathParameterizedTrajectory(
+#                 path=pickup_traj_retimed, time_scaling=pickup_traj_time
+#             )
+#             trajs.append(pickup_traj_delayed)
 
-            # Stay at the current pose for 5s before moving.
-            pause_before_start_traj = PiecewisePolynomial.ZeroOrderHold(
-                breaks=[
-                    pickup_traj_delayed.end_time(),
-                    pickup_traj_delayed.end_time() + 5.0,
-                ],
-                samples=np.stack([q_current, q_current], axis=1),
-            )
-            trajs.append(pause_before_start_traj)
+#             # Stay at the current pose for 5s before moving.
+#             pause_before_start_traj = PiecewisePolynomial.ZeroOrderHold(
+#                 breaks=[
+#                     pickup_traj_delayed.end_time(),
+#                     pickup_traj_delayed.end_time() + 5.0,
+#                 ],
+#                 samples=np.stack([q_current, q_current], axis=1),
+#             )
+#             trajs.append(pause_before_start_traj)
 
-            self._pickup_pause_end_time = pause_before_start_traj.end_time()
-            start_traj_start_time = pause_before_start_traj.end_time()
+#             self._pickup_pause_end_time = pause_before_start_traj.end_time()
+#             start_traj_start_time = pause_before_start_traj.end_time()
 
-        start_traj = plan_unconstrained_gcs_path_start_to_goal(
-            plant=iiwa_controller_plant,
-            q_start=q_current,
-            q_goal=self._excitation_traj.value(0.0),
-        )
-        start_traj_retimed = reparameterize_with_toppra(
-            trajectory=start_traj,
-            plant=iiwa_controller_plant,
-            velocity_limits=np.min(
-                [
-                    np.abs(iiwa_controller_plant.GetVelocityLowerLimits()),
-                    np.abs(iiwa_controller_plant.GetVelocityUpperLimits()),
-                ],
-                axis=0,
-            )
-            * self._start_traj_limit_fraction,
-            acceleration_limits=np.min(
-                [
-                    np.abs(iiwa_controller_plant.GetAccelerationLowerLimits()),
-                    np.abs(iiwa_controller_plant.GetAccelerationUpperLimits()),
-                ],
-                axis=0,
-            )
-            * self._start_traj_limit_fraction,
-        )
+#         start_traj = plan_unconstrained_gcs_path_start_to_goal(
+#             plant=iiwa_controller_plant,
+#             q_start=q_current,
+#             q_goal=self._excitation_traj.value(0.0),
+#         )
+#         start_traj_retimed = reparameterize_with_toppra(
+#             trajectory=start_traj,
+#             plant=iiwa_controller_plant,
+#             velocity_limits=np.min(
+#                 [
+#                     np.abs(iiwa_controller_plant.GetVelocityLowerLimits()),
+#                     np.abs(iiwa_controller_plant.GetVelocityUpperLimits()),
+#                 ],
+#                 axis=0,
+#             )
+#             * self._start_traj_limit_fraction,
+#             acceleration_limits=np.min(
+#                 [
+#                     np.abs(iiwa_controller_plant.GetAccelerationLowerLimits()),
+#                     np.abs(iiwa_controller_plant.GetAccelerationUpperLimits()),
+#                 ],
+#                 axis=0,
+#             )
+#             * self._start_traj_limit_fraction,
+#         )
 
-        # Delay the start trajectory.
-        start_traj_time = PiecewisePolynomial().FirstOrderHold(
-            [0.0, start_traj_retimed.end_time()],
-            [[0.0, start_traj_retimed.end_time()]],
-        )
-        start_traj_time.shiftRight(start_traj_start_time)
-        start_traj_delayed = PathParameterizedTrajectory(
-            path=start_traj_retimed, time_scaling=start_traj_time
-        )
-        trajs.append(start_traj_delayed)
+#         # Delay the start trajectory.
+#         start_traj_time = PiecewisePolynomial().FirstOrderHold(
+#             [0.0, start_traj_retimed.end_time()],
+#             [[0.0, start_traj_retimed.end_time()]],
+#         )
+#         start_traj_time.shiftRight(start_traj_start_time)
+#         start_traj_delayed = PathParameterizedTrajectory(
+#             path=start_traj_retimed, time_scaling=start_traj_time
+#         )
+#         trajs.append(start_traj_delayed)
 
-        # Delay the excitation trajectory to start after the start trajectory ends.
-        self._excitation_traj_start_time = start_traj_delayed.end_time()
-        excitation_traj_time = PiecewisePolynomial().FirstOrderHold(
-            [0.0, self._excitation_traj.end_time()],
-            [[0.0, self._excitation_traj.end_time()]],
-        )
-        self._excitation_traj_end_time = (
-            self._excitation_traj.end_time() + self._excitation_traj_start_time
-        )
-        excitation_traj_time.shiftRight(self._excitation_traj_start_time)
-        excitation_traj_delayed = PathParameterizedTrajectory(
-            path=self._excitation_traj, time_scaling=excitation_traj_time
-        )
-        trajs.append(excitation_traj_delayed)
+#         # Delay the excitation trajectory to start after the start trajectory ends.
+#         self._excitation_traj_start_time = start_traj_delayed.end_time()
+#         excitation_traj_time = PiecewisePolynomial().FirstOrderHold(
+#             [0.0, self._excitation_traj.end_time()],
+#             [[0.0, self._excitation_traj.end_time()]],
+#         )
+#         self._excitation_traj_end_time = (
+#             self._excitation_traj.end_time() + self._excitation_traj_start_time
+#         )
+#         excitation_traj_time.shiftRight(self._excitation_traj_start_time)
+#         excitation_traj_delayed = PathParameterizedTrajectory(
+#             path=self._excitation_traj, time_scaling=excitation_traj_time
+#         )
+#         trajs.append(excitation_traj_delayed)
 
-        if self._q_dropoff is not None:
-            # Add traj to dropoff position.
-            dropoff_traj = plan_unconstrained_gcs_path_start_to_goal(
-                plant=iiwa_controller_plant,
-                q_start=excitation_traj_delayed.value(
-                    excitation_traj_delayed.end_time()
-                ),
-                q_goal=self._q_dropoff,
-            )
-            dropoff_traj_retimed = reparameterize_with_toppra(
-                trajectory=dropoff_traj,
-                plant=iiwa_controller_plant,
-                velocity_limits=np.min(
-                    [
-                        np.abs(iiwa_controller_plant.GetVelocityLowerLimits()),
-                        np.abs(iiwa_controller_plant.GetVelocityUpperLimits()),
-                    ],
-                    axis=0,
-                )
-                * self._start_traj_limit_fraction,
-                acceleration_limits=np.min(
-                    [
-                        np.abs(iiwa_controller_plant.GetAccelerationLowerLimits()),
-                        np.abs(iiwa_controller_plant.GetAccelerationUpperLimits()),
-                    ],
-                    axis=0,
-                )
-                * self._start_traj_limit_fraction,
-            )
+#         if self._q_dropoff is not None:
+#             # Add traj to dropoff position.
+#             dropoff_traj = plan_unconstrained_gcs_path_start_to_goal(
+#                 plant=iiwa_controller_plant,
+#                 q_start=excitation_traj_delayed.value(
+#                     excitation_traj_delayed.end_time()
+#                 ),
+#                 q_goal=self._q_dropoff,
+#             )
+#             dropoff_traj_retimed = reparameterize_with_toppra(
+#                 trajectory=dropoff_traj,
+#                 plant=iiwa_controller_plant,
+#                 velocity_limits=np.min(
+#                     [
+#                         np.abs(iiwa_controller_plant.GetVelocityLowerLimits()),
+#                         np.abs(iiwa_controller_plant.GetVelocityUpperLimits()),
+#                     ],
+#                     axis=0,
+#                 )
+#                 * self._start_traj_limit_fraction,
+#                 acceleration_limits=np.min(
+#                     [
+#                         np.abs(iiwa_controller_plant.GetAccelerationLowerLimits()),
+#                         np.abs(iiwa_controller_plant.GetAccelerationUpperLimits()),
+#                     ],
+#                     axis=0,
+#                 )
+#                 * self._start_traj_limit_fraction,
+#             )
 
-            dropoff_traj_time = PiecewisePolynomial().FirstOrderHold(
-                [0.0, dropoff_traj_retimed.end_time()],
-                [[0.0, dropoff_traj_retimed.end_time()]],
-            )
-            dropoff_traj_time.shiftRight(excitation_traj_delayed.end_time())
-            dropoff_traj_delayed = PathParameterizedTrajectory(
-                path=dropoff_traj_retimed, time_scaling=dropoff_traj_time
-            )
-            self._dropoff_time = dropoff_traj_delayed.end_time()
-            trajs.append(dropoff_traj_delayed)
+#             dropoff_traj_time = PiecewisePolynomial().FirstOrderHold(
+#                 [0.0, dropoff_traj_retimed.end_time()],
+#                 [[0.0, dropoff_traj_retimed.end_time()]],
+#             )
+#             dropoff_traj_time.shiftRight(excitation_traj_delayed.end_time())
+#             dropoff_traj_delayed = PathParameterizedTrajectory(
+#                 path=dropoff_traj_retimed, time_scaling=dropoff_traj_time
+#             )
+#             self._dropoff_time = dropoff_traj_delayed.end_time()
+#             trajs.append(dropoff_traj_delayed)
 
-            # Stay at the current pose for 5s before moving.
-            pause_after_dropoff_traj = PiecewisePolynomial.ZeroOrderHold(
-                breaks=[
-                    dropoff_traj_delayed.end_time(),
-                    dropoff_traj_delayed.end_time() + 5.0,
-                ],
-                samples=np.stack([self._q_dropoff, self._q_dropoff], axis=1),
-            )
-            trajs.append(pause_after_dropoff_traj)
+#             # Stay at the current pose for 5s before moving.
+#             pause_after_dropoff_traj = PiecewisePolynomial.ZeroOrderHold(
+#                 breaks=[
+#                     dropoff_traj_delayed.end_time(),
+#                     dropoff_traj_delayed.end_time() + 5.0,
+#                 ],
+#                 samples=np.stack([self._q_dropoff, self._q_dropoff], axis=1),
+#             )
+#             trajs.append(pause_after_dropoff_traj)
 
-            self._pickup_pause_end_time = pause_before_start_traj.end_time()
-            start_traj_start_time = pause_before_start_traj.end_time()
+#             self._pickup_pause_end_time = pause_before_start_traj.end_time()
+#             start_traj_start_time = pause_before_start_traj.end_time()
 
-        self._combined_traj = CompositeTrajectory(trajs)
-        self._traj_source.UpdateTrajectory(self._combined_traj)
+#         self._combined_traj = CompositeTrajectory(trajs)
+#         self._traj_source.UpdateTrajectory(self._combined_traj)
 
-    def get_excitation_traj_start_time(self) -> float:
-        return self._excitation_traj_start_time
+#     def get_excitation_traj_start_time(self) -> float:
+#         return self._excitation_traj_start_time
 
-    def get_excitation_traj_end_time(self) -> float:
-        return self._excitation_traj_end_time
+#     def get_excitation_traj_end_time(self) -> float:
+#         return self._excitation_traj_end_time
 
-    def get_pickup_pause_end_time(self) -> Union[float, None]:
-        return self._pickup_pause_end_time
+#     def get_pickup_pause_end_time(self) -> Union[float, None]:
+#         return self._pickup_pause_end_time
 
-    def get_dropoff_time(self) -> Union[float, None]:
-        return self._dropoff_time
+#     def get_dropoff_time(self) -> Union[float, None]:
+#         return self._dropoff_time
 
-    def get_end_time(self) -> float:
-        return self._combined_traj.end_time()
+#     def get_end_time(self) -> float:
+#         return self._combined_traj.end_time()
 
 
-class WSGTrajectorySourceInitializer(LeafSystem):
-    """
-    A system that initializes the trajectory source with wsg position trajectory.
-    """
+# class WSGTrajectorySourceInitializer(LeafSystem):
+#     """
+#     A system that initializes the trajectory source with wsg position trajectory.
+#     """
 
-    def __init__(
-        self,
-        traj_source: TrajectorySource,
-        traj_source_initializer: ExcitationTrajectorySourceInitializer,
-        open_value: float = 0.1,
-        closed_value: float = 0.01,
-    ):
-        """
-        Args:
-            station: The IIWA hardware station diagram.
-            excitaiton_traj: The excitation trajectory.
-            traj_source: The trajectory source to initialize.
-            traj_source_initializer: The ExcitationTrajectorySourceInitializer.
-            open_value: The open gripper position.
-            closed_value: The closed gripper position.
-        """
-        super().__init__()
+#     def __init__(
+#         self,
+#         traj_source: TrajectorySource,
+#         traj_source_initializer: ExcitationTrajectorySourceInitializer,
+#         open_value: float = 0.1,
+#         closed_value: float = 0.01,
+#     ):
+#         """
+#         Args:
+#             station: The IIWA hardware station diagram.
+#             excitaiton_traj: The excitation trajectory.
+#             traj_source: The trajectory source to initialize.
+#             traj_source_initializer: The ExcitationTrajectorySourceInitializer.
+#             open_value: The open gripper position.
+#             closed_value: The closed gripper position.
+#         """
+#         super().__init__()
 
-        self._traj_source = traj_source
-        self._traj_source_initializer = traj_source_initializer
-        self._open_value = open_value
-        self._closed_value = closed_value
+#         self._traj_source = traj_source
+#         self._traj_source_initializer = traj_source_initializer
+#         self._open_value = open_value
+#         self._closed_value = closed_value
 
-        self.DeclareInitializationDiscreteUpdateEvent(self._initialize_discrete_state)
+#         self.DeclareInitializationDiscreteUpdateEvent(self._initialize_discrete_state)
 
-    def _initialize_discrete_state(
-        self, context: Context, discrete_values: DiscreteValues
-    ) -> None:
-        traj = PiecewisePolynomial.ZeroOrderHold(
-            [
-                0.0,
-                self._traj_source_initializer.get_pickup_pause_end_time() - 1.0,
-                self._traj_source_initializer.get_dropoff_time(),
-                self._traj_source_initializer.get_end_time(),
-            ],
-            np.array(
-                [
-                    [
-                        self._open_value,
-                        self._closed_value,
-                        self._open_value,
-                        self._open_value,
-                    ]
-                ]
-            ),
-        )
+#     def _initialize_discrete_state(
+#         self, context: Context, discrete_values: DiscreteValues
+#     ) -> None:
+#         traj = PiecewisePolynomial.ZeroOrderHold(
+#             [
+#                 0.0,
+#                 self._traj_source_initializer.get_pickup_pause_end_time() - 1.0,
+#                 self._traj_source_initializer.get_dropoff_time(),
+#                 self._traj_source_initializer.get_end_time(),
+#             ],
+#             np.array(
+#                 [
+#                     [
+#                         self._open_value,
+#                         self._closed_value,
+#                         self._open_value,
+#                         self._open_value,
+#                     ]
+#                 ]
+#             ),
+#         )
 
-        self._traj_source.UpdateTrajectory(traj)
+#         self._traj_source.UpdateTrajectory(traj)

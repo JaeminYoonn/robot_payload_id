@@ -1,5 +1,5 @@
 from .trajectory import (
-    ExcitationTrajectorySourceInitializer,
+    # ExcitationTrajectorySourceInitializer,
     FourierSeriesTrajectory,
-    WSGTrajectorySourceInitializer,
+    # WSGTrajectorySourceInitializer,
 )
