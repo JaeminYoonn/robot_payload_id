@@ -14,7 +14,7 @@ from robot_payload_id.utils import get_package_xmls
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "model_path",
+        "--model_path",
         type=str,
         help="Path to the model file to visualize the ellipsoids for.",
     )

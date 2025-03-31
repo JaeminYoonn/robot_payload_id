@@ -39,10 +39,10 @@ def write_parameters_to_plant(
             continue
 
         try:
-            link: RigidBody = plant.GetBodyByName(f"iiwa_link_{i+1}")
-            joint: RevoluteJoint = plant.GetJointByName(f"iiwa_joint_{i+1}")
+            link: RigidBody = plant.GetBodyByName(f"panda_link{i+1}")
+            joint: RevoluteJoint = plant.GetJointByName(f"panda_joint{i+1}")
             joint_actuator: JointActuator = plant.GetJointActuatorByName(
-                f"iiwa_joint_{i+1}"
+                f"panda_motor{i+1}"
             )
         except:
             link: RigidBody = plant.GetBodyByName(f"link{i + 1}")
