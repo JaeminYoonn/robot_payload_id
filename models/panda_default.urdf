@@ -41,7 +41,6 @@
   </link>
 
   <joint name="panda_joint1" type="revolute">
-    <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-2.8973" soft_upper_limit="2.8973" />
     <origin rpy="-7.070853699609467e-20 7.01457620144154e-17 -5.871445110820177e-17" xyz="1.6453621370977905e-17 8.128699592849844e-17 0.3330000000000001" />
     <parent link="panda_link0" />
     <child link="panda_link1" />
@@ -69,7 +68,6 @@
   </link>
 
   <joint name="panda_joint2" type="revolute">
-    <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-1.7628" soft_upper_limit="1.7628" />
     <origin rpy="-1.569663240507509 2.1599930128152177e-05 -1.8298134019183714e-12" xyz="-0.00022476212368955053 0.000203106104820772 2.8230196526247564e-17" />
     <parent link="panda_link1" />
     <child link="panda_link2" />
@@ -97,7 +95,6 @@
   </link>
 
   <joint name="panda_joint3" type="revolute">
-    <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-2.8973" soft_upper_limit="2.8973" />
     <origin rpy="1.5699746877243725 -0.0010472273004368765 1.3751793428407215e-05" xyz="2.483591980168594e-05 -0.31585675510886724 0.00020310596611635017" />
     <parent link="panda_link2" />
     <child link="panda_link3" />
@@ -125,7 +122,6 @@
   </link>
 
   <joint name="panda_joint4" type="revolute">
-    <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-3.0718" soft_upper_limit="0.0175" />
     <origin rpy="1.5689175804611115 0.0007229190055229249 0.0010286904104520262" xyz="0.08238210033982035 0.000224830817889553 -0.00014307764469451107" />
     <parent link="panda_link3" />
     <child link="panda_link4" />
@@ -153,7 +149,6 @@
   </link>
 
   <joint name="panda_joint5" type="revolute">
-      <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-2.8973" soft_upper_limit="2.8973" />
       <origin rpy="-1.5725568343411012 0.002818808125247204 -0.0008331711560464819" xyz="-0.08277427447127986 0.38391682272804906 -0.0002252205503509532" />
       <parent link="panda_link4" />
       <child link="panda_link5" />
@@ -181,7 +176,6 @@
   </link>
 
   <joint name="panda_joint6" type="revolute">
-    <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-0.0175" soft_upper_limit="3.7525" />
     <origin rpy="1.5664543458823141 0.0005001399131159785 0.002820279303635351" xyz="0.0007331599331725679 0.0002672518669462526 -8.300776996215768e-05" />
     <parent link="panda_link5" />
     <child link="panda_link6" />
@@ -209,7 +203,6 @@
   </link>
 
   <joint name="panda_joint7" type="revolute">
-    <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-2.8973" soft_upper_limit="2.8973" />
     <origin rpy="1.5708749860536488 2.9911583861364804e-08 -0.0003802655003243309" xyz="0.08680641996738661 -0.0012231086910573829 -0.00026553941424996123" />
     <parent link="panda_link6" />
     <child link="panda_link7" />

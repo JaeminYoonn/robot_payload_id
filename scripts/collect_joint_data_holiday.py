@@ -125,7 +125,7 @@ class JointStatePublisher(Node):
 
                 self.future = self.motion_planner_client.call_async(move_srv)
                 self.move_res_received = False
-    
+
             else:
                 if self.future.done():
                     print("MP is done")
@@ -169,7 +169,6 @@ class JointStatePublisher(Node):
             self.joint_position_commands.append(self.joint_position_command)
             self.joint_torque_commands.append(self.joint_torque_command)
             self.sample_times_s.append(self.time_now)
-
 
     def data_save(self):
         self.joint_positions = np.array(self.joint_positions)
